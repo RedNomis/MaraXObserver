@@ -1,52 +1,45 @@
 /*********************************************************************
-  This is an example for our Monochrome OLEDs based on SH110X drivers
 
-  This example is for a 128x64 size display using I2C to communicate
-  3 pins are required to interface (2 I2C and one reset)
-
-  Adafruit invests time and resources providing this open source code,
-  please support Adafruit and open-source hardware by purchasing
-  products from Adafruit!
-
-  Written by Limor Fried/Ladyada  for Adafruit Industries.
-  BSD license, check license.txt for more information
-  All text above, and the splash screen must be included in any redistribution
-
-  i2c SH1106 modified by Rupert Hirst  12/09/21
 *********************************************************************/
 
-
-
-//#include <SPI.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SH110X.h>
-#include <ESP8266WiFi.h>        // Include the Wi-Fi library
+#include <ESP8266WiFi.h>
 #include <WiFiClient.h>
 #include <ESP8266WebServer.h>
 #include <SoftwareSerial.h>
 
+// Wireless Login
 const char* ssid     = "SZINetzwerk";         // The SSID (name) of the Wi-Fi network you want to connect to
 const char* password = "Blue-eyes1405";     // The password of the Wi-Fi network
 
-// Serial Port PINS
-#define D5 14
-#define D6 12
+// initialize webserver
+ESP8266WebServer server(80);
 
+// Serial Port PINS ESP8266
+#define D5              14
+#define D6              12
+
+// Serial Port Buffer Size
 #define BUFFER_SIZE     32
 
 
 // Display stuff
-#define SCREEN_WIDTH 128 // OLED display width, in pixels
-#define SCREEN_HEIGHT 64 // OLED display height, in pixels
-#define OLED_RESET -1   //   QT-PY / XIAO
-/* Uncomment the initialize the I2C address , uncomment only one, If you get a totally blank screen try the other*/
-#define i2c_Address 0x3c //initialize with the I2C addr 0x3C Typically eBay OLED's
+#define SCREEN_WIDTH   128 // OLED display width, in pixels
+#define SCREEN_HEIGHT   64 // OLED display height, in pixels
+#define OLED_RESET      -1 // QT-PY / XIAO
+#define i2c_Address   0x3c // initialize with the I2C addr 0x3C Typically eBay OLED's
+
+// initialize the 1.3 inch OLED display
 Adafruit_SH1106G display = Adafruit_SH1106G(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+// initialize the serial port
 SoftwareSerial mySerial(D5, D6);
 
 // Splash settings
-#define DELAY_SPLASH 75
+#define DELAY_SPLASH    75
+
 String sWelcomeStringArray[45] = {
   "         H",
   "        Ha",
@@ -95,8 +88,7 @@ String sWelcomeStringArray[45] = {
   "          ",
 };
 
-// Webserver
-ESP8266WebServer server(80);
+
 
 // variables
 bool gbInit = true;
@@ -105,7 +97,10 @@ bool gbCoffeeMode = false;
 bool gbHeaterOn = false;
 int giHx = 32;
 int giBo = 110;
-int giCurrentCounter = 0;
+int giCurrentCounter = 1;
+int giLastCounter = 0;
+
+long lLastMillis = 0;
 
 //Internals
 long lastMillis;
@@ -132,10 +127,6 @@ void setup()   {
   
   WiFi.begin(ssid, password);  
 
-  // Show image buffer on the display hardware.
-  // Since the buffer is intialized with an Adafruit splashscreen
-  // internally, this will display the splashscreen.
-
   delay(250); // wait for the OLED to power up
   display.begin(i2c_Address, true); // Address 0x3C default
   display.clearDisplay();
@@ -146,9 +137,13 @@ void setup()   {
   mySerial.begin(9600);
   memset(buffer, 0, BUFFER_SIZE);
   mySerial.write(0x11);  
+
+  showMessage("Waiting for the Mara X");
 }
 
+//////////////////////////////////////////////////////////////////////////////////////
 void showMessage(String message)  {
+//////////////////////////////////////////////////////////////////////////////////////
   display.clearDisplay();    
   // text display tests
   display.setTextSize(1);
@@ -159,11 +154,12 @@ void showMessage(String message)  {
   delay(1000);
 }
 
-
+//////////////////////////////////////////////////////////////////////////////////////
 void getMaraData()
+//////////////////////////////////////////////////////////////////////////////////////
 {
   /*
-    Example Data: C1.06,116,124,093,0840,1,0\n every ~400-500ms
+    Example Data: C1.10,116,124,093,0840,1,0\n every ~400-500ms
     Length: 26
     [Pos] [Data] [Describtion]
     0)      C     Coffee Mode (C) or SteamMode (V)
@@ -328,6 +324,7 @@ void showSplash() {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
+// show the main screen with the temperature information
 void showMain(bool bCoffeeMode, bool bHeaterOn, String sHXTemp, String sBoTemp)   {
 //////////////////////////////////////////////////////////////////////////////////////  
   display.clearDisplay();  
@@ -363,13 +360,15 @@ void showMain(bool bCoffeeMode, bool bHeaterOn, String sHXTemp, String sBoTemp) 
 
   display.setTextSize(1);
   display.println("---------------------");
-  display.println("letzter Bezug: 34 s");
-  
-  display.display(); 
+  display.print("letzter Bezug: ");
+  display.print(giLastCounter);
+  display.println(" s");
+  display.display();   
   
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
+// show the counter screen; if pump is on this screen is active 
 void showCounter(bool bCoffeeMode, bool bHeaterOn, String sCounter)   {
 //////////////////////////////////////////////////////////////////////////////////////
   display.clearDisplay();  
@@ -398,8 +397,9 @@ void showCounter(bool bCoffeeMode, bool bHeaterOn, String sCounter)   {
   display.setTextSize(1);
   //display.println("");
   display.println("---------------------");
-  display.println("letzter Bezug: 34 s");
-  
+  display.print("letzter Bezug: ");
+  display.print(giLastCounter);
+  display.println(" s");  
   display.display();   
 }
 
@@ -414,44 +414,47 @@ void TempMessung() {
 void loop() {
 //////////////////////////////////////////////////////////////////////////////////////
 
-  if (gbInit) {
+  /*if (gbInit) {
     //startNetwork();
     showSplash();    
     gbInit = false;
   }
-
+*/
   //server.handleClient();
 
   getMaraData();
-  
-  if (lastMaraData[0].startsWith("C"))
-    gbCoffeeMode = true;
-  else
-    gbCoffeeMode = false;
 
-  if (lastMaraData[5] = "1")
-    gbHeaterOn = true;
-  else
-    gbHeaterOn = false;
-  
-  
+  if (lastMaraData != NULL) {
+    if (lastMaraData[0].startsWith("C"))
+      gbCoffeeMode = true;
+    else
+      gbCoffeeMode = false;
 
-  if (lastMaraData[6].toInt() > 0)
-    gbPumpOn = true;
-  else
-    gbPumpOn = false;
-    
+    if (lastMaraData[5].toInt() > 0)
+      gbHeaterOn = true;
+    else
+      gbHeaterOn = false;
   
-  if (gbPumpOn)  {
+    if (lastMaraData[6].toInt() > 0)
+      gbPumpOn = true;
+    else
+      gbPumpOn = false;
     
-    showCounter(gbCoffeeMode, gbHeaterOn, String(giCurrentCounter));
-    delay(1000);
-    giCurrentCounter++;
-  }
-  else {
-    giCurrentCounter = 0;
-    showMain(gbCoffeeMode, gbHeaterOn, lastMaraData[3], lastMaraData[1]);  
-  }
+    if (gbPumpOn)  {
       
-  delay(20);
+      showCounter(gbCoffeeMode, gbHeaterOn, String(giCurrentCounter));
+      if ( millis() - lastMillis >= 1000) {
+        lastMillis = millis();
+        ++giCurrentCounter;        
+      if (giCurrentCounter > 99)
+        giCurrentCounter = 0;
+      }            
+    }
+    else {
+      if (giCurrentCounter > 0)
+        giLastCounter = giCurrentCounter;
+      giCurrentCounter = 0;
+      showMain(gbCoffeeMode, gbHeaterOn, lastMaraData[3], lastMaraData[1]);  
+    }
+  }  
 }
