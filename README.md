@@ -8,6 +8,8 @@ Hx -> Heat exchanger temperature
 
 Bo -> Boiler temperature
 
+||| -> Heating system
+
 ## todo
 * Case (3D Print)
 * Webserver
