@@ -1,6 +1,19 @@
-/*********************************************************************
+# Copyright (C) 2023 Simon Ziehme
+# This file is part of MaraXObserver <https://github.com/RedNomis/MaraXObserver>.
+#
+# MaraXObserver is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# MaraXObserver is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with dogtag.  If not, see <http://www.gnu.org/licenses/>.
 
-*********************************************************************/
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SH110X.h>
@@ -57,7 +70,7 @@ char rc;
 
 //////////////////////////////////////////////////////////////////////////////////////
 void setup()   {
-  //////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////
   delay(250); // wait for the OLED to power up
   display.begin(i2c_Address, true); // Address 0x3C default
   display.clearDisplay();
@@ -72,7 +85,7 @@ void setup()   {
 
 //////////////////////////////////////////////////////////////////////////////////////
 void showMessage(String message)  {
-  //////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////
   display.clearDisplay();
   // text display tests
   display.setTextSize(1);
@@ -101,6 +114,7 @@ void getMaraData()
     6)      0     pump on or off
   */
 
+  // read serial interface
   while (mySerial.available())
   {
     serialTimeout = millis();
@@ -131,7 +145,7 @@ void getMaraData()
 //////////////////////////////////////////////////////////////////////////////////////
 // show the main screen with the temperature information
 void showMain(bool bCoffeeMode, bool bHeaterOn, String sHXTemp, String sBoTemp)   {
-  //////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////
   display.clearDisplay();
   display.setTextSize(1);
   display.setTextColor(SH110X_WHITE);
@@ -174,7 +188,7 @@ void showMain(bool bCoffeeMode, bool bHeaterOn, String sHXTemp, String sBoTemp) 
 //////////////////////////////////////////////////////////////////////////////////////
 // show the counter screen; if pump is on this screen is active
 void showCounter(bool bCoffeeMode, bool bHeaterOn, String sCounter)   {
-  //////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////
   display.clearDisplay();
   display.setTextSize(1);
   display.setTextColor(SH110X_WHITE);
@@ -209,7 +223,7 @@ void showCounter(bool bCoffeeMode, bool bHeaterOn, String sCounter)   {
 
 //////////////////////////////////////////////////////////////////////////////////////
 void loop() {
-  //////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////
   getMaraData();
 
   if (lastMaraData != NULL) {
