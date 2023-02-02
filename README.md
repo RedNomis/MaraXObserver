@@ -1,5 +1,5 @@
 # Lelit Mara X (V2) data observer with shot-timer
-This small project makes it possible to query and visualize the data of the Lelit Mara X (V2) via its serial interface.
+This small project makes it possible to query and visualize the data of the Lelit Mara X (V2) via serial interface.
 In addition, a timer is started and displayed to indicate the time the pump runs as coffee is drawn.
 
 ## todo
