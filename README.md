@@ -22,3 +22,6 @@ Costs ~ 15 € (Germany)
 * Adafruit_GFX.h
 * Adafruit_SH110X.h
 * SoftwareSerial.h
+
+## Circuit
+![Circuit](MaraCObserverHW.png)
