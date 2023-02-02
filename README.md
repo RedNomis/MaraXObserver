@@ -2,6 +2,12 @@
 This small project makes it possible to query and visualize the data of the Lelit Mara X (V2) via serial interface.
 In addition, a timer is started and displayed to indicate the time the pump runs as coffee is drawn.
 
+![Sample](MaraXObserverUI.png)
+
+Hx -> Heat exchanger temperature
+
+Bo -> Boiler temperature
+
 ## todo
 * Case (3D Print)
 * Webserver
