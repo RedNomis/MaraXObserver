@@ -24,4 +24,4 @@ Costs ~ 15 € (Germany)
 * SoftwareSerial.h
 
 ## Circuit
-![Circuit](MaraCObserverHW.png)
+![Circuit](MaraXObserverHW.png)
